@@ -34,13 +34,41 @@ Or to notify of a finished deploy:
 
     bundle exec cap production pusher:notify_finished
 
-By default, this will publish something along the lines of:
+By default, this will publish a `started` event to the `Capistrano` channel with the following payload
 
-    Revision 64a3c1de of my_app deployed to production by seenmyfate in 333 seconds.
+    {
+      message: 'production deploy starting with revision/branch 64a3c1de for my_app',
+      user: 'seenmyfate',
+      application: 'my_app',
+      revision: '64a3c1de',
+      branch: 'master',
+      stage: 'production',
+      state: 'started'
+    }
+   
+When a deploy has finished, a `finished` event will be published:
 
-If a deploy has failed, the following message will be published by default:
+    {
+      message: 'Revision 64a3c1de of my_app deployed to production by seenmyfate in 333 seconds.',
+      user: 'seenmyfate',
+      application: 'my_app',
+      revision: '64a3c1de',
+      branch: 'master',
+      stage: 'production',
+      state: 'finished'
+    } 
 
-    production deploy of my_app with revision/branch 64a3c1de failed
+If a deploy has failed, a `failed` event will be published::
+
+    {
+      message: 'production deploy of my_app with revision/branch 64a3c1de failed',
+      user: 'seenmyfate',
+      application: 'my_app',
+      revision: '64a3c1de',
+      branch: 'master',
+      stage: 'production',
+      state: 'failed'
+    }
 
 As with the other tasks, it is also possible to notify failures manually:
 
