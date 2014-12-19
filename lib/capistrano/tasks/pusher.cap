@@ -1,0 +1,70 @@
+namespace :pusher do
+  desc 'Notify Pusher of a deployment - :pusher_url must be set'
+  task :notify_started do
+    run_locally do
+      info 'Notifying Pusher of started deploy'
+      set :time_started, Time.now.to_i
+      set :pusher_message, fetch(:pusher_deploy_started_text)
+      set :pusher_state, :started
+      Capistrano::Push.new(fetch(:pusher_url), fetch(:pusher_channel)).
+        trigger(fetch(:pusher_state), fetch(:pusher_payload))
+    end
+  end
+  before 'deploy:starting', 'pusher:notify_started'
+
+  desc 'Notify Pusher of a deployment - :pusher_url must be set'
+  task :notify_finished do
+    run_locally do
+      info 'Notifying Pusher of completed deploy'
+      set :time_finished, Time.now.to_i
+      set :pusher_message, fetch(:pusher_deploy_finished_text)
+      set :pusher_state, :finished
+      Capistrano::Push.new(fetch(:pusher_url), fetch(:pusher_channel)).
+        trigger(fetch(:pusher_state), fetch(:pusher_payload))
+    end
+  end
+  after 'deploy:finished', 'pusher:notify_finished'
+
+  desc 'Notify Pusher of a deployment failure - :pusher_url must be set'
+  task :notify_failed do
+    run_locally do
+      info 'Notifying Pusher of failed deploy'
+      set :time_finished, Time.now.to_i
+      set :pusher_message, fetch(:pusher_deploy_failed_text)
+      set :pusher_state, :failed
+      Capistrano::Push.new(fetch(:pusher_url), fetch(:pusher_channel)).
+        trigger(fetch(:pusher_state), fetch(:pusher_payload))
+    end
+  end
+  after 'deploy:failed', 'pusher:notify_failed'
+end
+
+namespace :load do
+  task :defaults do
+    set :pusher_channel, 'capistrano'
+    set :pusher_user, ENV['GIT_AUTHOR_NAME']
+    set :pusher_payload, -> {
+      {
+        message: fetch(:pusher_message),
+        user: fetch(:pusher_user),
+        application: fetch(:application),
+        revision: fetch(:current_revision),
+        branch: fetch(:branch),
+        stage: fetch(:stage),
+        state: fetch(:pusher_state)
+      }
+    }
+    set :pusher_deploy_completed_text, -> {
+      elapsed = Integer(fetch(:time_finished) - fetch(:time_started))
+      "Revision #{fetch(:current_revision, fetch(:branch))} of " \
+        "#{fetch(:application)} deployed to #{fetch(:stage)} by #{fetch(:pusher_user)} " \
+        "in #{elapsed} seconds."
+    }
+    set :pusher_deploy_started_text, -> {
+      "#{fetch(:stage)} deploy started with revision/branch #{fetch(:current_revision, fetch(:branch))} for #{fetch(:application)}"
+    }
+    set :pusher_deploy_failed_text, -> {
+      "#{fetch(:stage)} deploy of #{fetch(:application)} with revision/branch #{fetch(:current_revision, fetch(:branch))} failed"
+    }
+  end
+end
