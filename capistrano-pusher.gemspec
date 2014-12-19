@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['seenmyfate@gmail.com']
   spec.summary       = %q{Publish deployment notifications to Pusher}
   spec.description   = %q{Publish deployment notifications to Pusher}
-  spec.homepage      = ''
+  spec.homepage      = 'https://github.com/onthebeach/capistrano-pusher'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0")
